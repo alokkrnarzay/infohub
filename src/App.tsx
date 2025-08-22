@@ -22,6 +22,7 @@ import NotFoundPage from './pages/NotFound';
 import PrivacyPolicy from './pages/Privacy';
 import TermsOfService from './pages/Terms';
 import Donate from './pages/Donate';
+import StatusPage from './pages/Status';
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/donate" element={<Donate />} />
+                <Route path="/status" element={<StatusPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/admin" element={
                   <ProtectedRoute>

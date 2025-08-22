@@ -44,6 +44,18 @@ export default async function handler(req: any, res: any) {
           const body = await ures.text();
           return res.status(500).json({ error: body });
         }
+        // Try to publish a lightweight notification so subscribers can react (best-effort)
+        try {
+          const chan = 'infohub-updates';
+          // Upstash pubsub REST endpoint: POST /publish/:channel
+          await fetch(UPSTASH_URL.replace(/\/$/, '') + `/publish/${encodeURIComponent(chan)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${UPSTASH_TOKEN}` },
+            body: JSON.stringify({ message: JSON.stringify({ key, value }) }),
+          }).catch(() => { /* ignore publish errors */ });
+        } catch (e) {
+          // ignore
+        }
         return res.status(200).json({ ok: true });
       }
 

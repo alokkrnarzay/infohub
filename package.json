@@ -5,9 +5,10 @@
   "scripts": {
   "dev": "vite",
   "dev:api": "node ./server/dev-admin-api.js",
-    "build": "vite build",
-    "lint": "eslint --quiet ./src",
-    "preview": "vite preview"
+  "build": "vite build",
+  "lint": "eslint --quiet ./src",
+  "preview": "vite preview",
+  "check:upstash": "node --experimental-fetch ./scripts/check-upstash.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

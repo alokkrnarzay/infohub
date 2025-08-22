@@ -50,3 +50,21 @@ pnpm run build
 ## Notes
 - Data persistence is implemented via `localStorage` for demo purposes. For production, replace with secure server-side APIs and databases.
 - Path alias `@/` maps to `src/`.
+
+## Upstash KV
+This project supports client-side Upstash KV as an optional remote key-value store. The helper is implemented in `src/lib/upstash.ts` and the app will prefer Upstash when the required environment variables are set.
+
+To enable Upstash KV:
+1. Create an Upstash Redis instance (or use an existing one). The example instance name used in this repo is `upstash-kv-rose-park`.
+2. Add the REST URL and REST token to your environment (see `.env.example`). Example variables:
+
+```
+VITE_UPSTASH_REST_URL=https://<your-instance>.rest.upstash.io
+VITE_UPSTASH_REST_TOKEN=<your-rest-token>
+```
+
+3. Restart the dev server. The app will read the variables via `import.meta.env` and use Upstash for remote persistence (used by `useLocalStorage` hook).
+
+Notes:
+- When Upstash is configured, the app will treat the remote store as the source-of-truth and will not persist locally to `localStorage` for keys managed remotely.
+- Keep your tokens secret; do not commit real tokens to the repo.

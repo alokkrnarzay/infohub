@@ -40,6 +40,7 @@ export default function Footer() {
               <li><Link to="/donate" className="text-gray-300 hover:text-white transition-colors">Donate</Link></li>
               <li><Link to="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/status" className="text-gray-300 hover:text-white transition-colors">Status</Link></li>
             </ul>
           </div>
         </div>

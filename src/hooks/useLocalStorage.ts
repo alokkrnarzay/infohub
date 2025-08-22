@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isSupabaseConfigured, getKV, setKV } from '@/lib/supabase';
 import { isUpstashConfigured, upstashGet } from '@/lib/upstash';
 
@@ -39,6 +39,44 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       }
     })();
     return () => { mounted = false; };
+  }, [key]);
+
+  // Poll remote KV for updates so multiple clients see changes shortly after an admin saves.
+  // Only enabled when a remote backend is configured.
+  useEffect(() => {
+    if (!isUpstashConfigured && !isSupabaseConfigured) return;
+    let mounted = true;
+    const latestRef = useRef<any>(storedValue);
+    // keep ref in sync when storedValue changes
+    latestRef.current = storedValue;
+
+    const interval = setInterval(async () => {
+      try {
+        let remote: any = null;
+        if (isUpstashConfigured) {
+          remote = await upstashGet(key);
+        } else if (isSupabaseConfigured) {
+          remote = await getKV(key);
+        }
+        if (!mounted) return;
+        if (remote !== undefined && remote !== null) {
+          const current = JSON.stringify(latestRef.current);
+          const next = JSON.stringify(remote);
+          if (current !== next) {
+            setStoredValue(remote as T);
+            try {
+              window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, newValue: remote } }));
+            } catch (err) {
+              // ignore
+            }
+          }
+        }
+      } catch (err) {
+        // ignore intermittent errors
+      }
+    }, 3000); // poll every 3s for faster propagation
+
+    return () => { mounted = false; clearInterval(interval); };
   }, [key]);
 
   // Keep hook in sync across tabs (storage event) and within the same tab
