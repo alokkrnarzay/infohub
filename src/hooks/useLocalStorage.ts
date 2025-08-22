@@ -40,6 +40,22 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     };
   }, [key, initialValue]);
 
+  // Ensure initialValue is persisted once if the key is not present in localStorage.
+  useEffect(() => {
+    try {
+      const exists = window.localStorage.getItem(key);
+      if (exists === null) {
+        const stringified = JSON.stringify(storedValue);
+        window.localStorage.setItem(key, stringified);
+      }
+    } catch (err) {
+      // ignore write errors
+      console.warn(`Could not persist initial localStorage key "${key}"`, err);
+    }
+    // We intentionally depend on key only; storedValue may change, but we only want
+    // to write the initial value when the key is absent.
+  }, [key]);
+
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
