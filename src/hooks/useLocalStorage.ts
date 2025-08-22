@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isSupabaseConfigured, getKV, setKV } from '@/lib/supabase';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -10,6 +11,29 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       return initialValue;
     }
   });
+
+  // If Supabase is configured, try to fetch the remote value once and use it
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const remote = await getKV(key);
+        if (!mounted) return;
+        if (remote !== null && remote !== undefined) {
+          setStoredValue(remote as T);
+          try {
+            window.localStorage.setItem(key, JSON.stringify(remote));
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to sync initial value from Supabase', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [key]);
 
   // Keep hook in sync across tabs (storage event) and within the same tab
   // (custom 'local-storage' event dispatched after setItem).
@@ -62,6 +86,14 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       setStoredValue(valueToStore);
       const stringified = JSON.stringify(valueToStore);
       window.localStorage.setItem(key, stringified);
+      // If Supabase is configured, persist remotely as well.
+      if (isSupabaseConfigured) {
+        try {
+          setKV(key, valueToStore).catch((e) => console.warn('Failed to write KV to Supabase', e));
+        } catch (err) {
+          console.warn('Supabase setKV error', err);
+        }
+      }
       // Notify same-tab listeners (other components) about the change.
       try {
         window.dispatchEvent(
