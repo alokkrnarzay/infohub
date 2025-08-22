@@ -56,6 +56,17 @@ export default async function handler(req: any, res: any) {
         } catch (e) {
           // ignore
         }
+        // Best-effort: write a last-update marker so clients can short-poll it and apply updates quickly.
+        try {
+          const marker = { key, value, ts: Date.now() };
+          await fetch(UPSTASH_URL.replace(/\/$/, '') + `/set/${encodeURIComponent('infohub:last_update')}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${UPSTASH_TOKEN}` },
+            body: JSON.stringify({ value: marker }),
+          }).catch(() => { /* ignore marker write errors */ });
+        } catch (e) {
+          // ignore
+        }
         return res.status(200).json({ ok: true });
       }
 

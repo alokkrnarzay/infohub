@@ -26,7 +26,12 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         if (isUpstashConfigured) {
           remote = await upstashGet(key);
         } else if (isSupabaseConfigured) {
-          remote = await getKV(key);
+          // Use server-side endpoint which will read upstream (Upstash/Supabase) without exposing tokens
+          const resp = await fetch(`/api/kv?key=${encodeURIComponent(key)}`);
+          if (resp.ok) {
+            const body = await resp.json();
+            remote = body?.result ?? null;
+          }
         }
         if (!mounted) return;
         if (remote !== null && remote !== undefined) {
@@ -77,6 +82,31 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }, 3000); // poll every 3s for faster propagation
 
     return () => { mounted = false; clearInterval(interval); };
+  }, [key]);
+
+  // Short-poll marker for near-instant updates. Polls every 1s for the 'infohub:last_update' marker
+  // and applies the value immediately when it matches this key.
+  useEffect(() => {
+    if (!isUpstashConfigured && !isSupabaseConfigured) return;
+    let mounted = true;
+    const poll = setInterval(async () => {
+      try {
+        const resp = await fetch(`/api/kv?key=${encodeURIComponent('infohub:last_update')}`);
+        if (!mounted || !resp.ok) return;
+        const body = await resp.json();
+        const marker = body?.result;
+        if (!marker || !marker.key) return;
+        if (marker.key === key) {
+          // apply immediately
+          setStoredValue(marker.value as T);
+          try { window.dispatchEvent(new CustomEvent('local-storage', { detail: { key, newValue: marker.value } })); } catch (_) {}
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 1000);
+
+    return () => { mounted = false; clearInterval(poll); };
   }, [key]);
 
   // Keep hook in sync across tabs (storage event) and within the same tab
