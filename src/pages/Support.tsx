@@ -55,7 +55,7 @@ export default function Support() {
     updatedAt: new Date().toISOString(),
   });
   const DEFAULT_PAYMENT_URL = 'https://payments.cashfree.com/forms/akny';
-  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
+  const [siteContact] = useLocalStorage('site_contact', { email: 'alokkrnarzary@gmail.com', address: 'Kokrajhar, 783370' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

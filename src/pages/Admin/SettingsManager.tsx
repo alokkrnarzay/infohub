@@ -14,7 +14,7 @@ type SiteContact = {
 };
 
 const defaultContact: SiteContact = {
-  email: 'freeinformationetc@gmail.com',
+  email: 'alokkrnarzary@gmail.com',
   address: 'Kokrajhar, 783370',
 };
 

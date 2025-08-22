@@ -3,7 +3,7 @@ import { Mail } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export default function Footer() {
-  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
+  const [siteContact] = useLocalStorage('site_contact', { email: 'alokkrnarzary@gmail.com', address: 'Kokrajhar, 783370' });
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -17,7 +17,7 @@ export default function Footer() {
             <div className="flex space-x-4">
               <div className="flex items-center text-gray-300">
                 <Mail className="h-4 w-4 mr-2" />
-                {siteContact.email}
+                <a href={`mailto:${siteContact.email}`} className="hover:underline">{siteContact.email}</a>
               </div>
                           </div>
           </div>
