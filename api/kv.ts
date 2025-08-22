@@ -1,15 +1,21 @@
 // Server-side KV read endpoint. Query param: ?key=site_contact
 // Prefers Upstash server-side when UPSTASH_REST_URL and UPSTASH_REST_TOKEN are set.
-import { createClient } from '@supabase/supabase-js';
-
 const UPSTASH_URL = process.env.UPSTASH_REST_URL;
 const UPSTASH_TOKEN = process.env.UPSTASH_REST_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
-  : null;
+async function getSupabaseClient() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) return null;
+  try {
+    const mod = await import('@supabase/supabase-js');
+    return mod.createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[api/kv] failed to dynamically import supabase', e?.message || e);
+    return null;
+  }
+}
 
 export default async function handler(req: any, res: any) {
   try {
@@ -28,13 +34,14 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ result: data.result ?? null });
     }
 
+    const supabase = await getSupabaseClient();
     if (!supabase) return res.status(500).json({ error: 'No upstream configured' });
     const { data, error } = await supabase.from('kv').select('value').eq('key', key).single();
     if (error) return res.status(500).json({ error });
     return res.status(200).json({ result: data?.value ?? null });
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error('[api/kv] handler error', err);
+    console.error('[api/kv] handler error', err?.stack || err?.message || err);
     return res.status(500).json({ error: 'Unexpected error' });
   }
 }
