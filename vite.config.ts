@@ -5,9 +5,9 @@ import { viteSourceLocator } from "@metagptx/vite-plugin-source-locator";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // When deploying to GitHub Pages under a repo (username.github.io/<repo>),
-  // set the base to the repository name so built asset URLs are correct.
-  base: '/infohub/',
+  // Use root base for Vercel deployments so assets are served from '/'.
+  // If you deploy to a subpath (e.g., GitHub Pages under a repo), change this back.
+  base: '/',
   plugins: [
     viteSourceLocator({
       prefix: "mgx",
