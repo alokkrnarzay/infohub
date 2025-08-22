@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { isSupabaseConfigured, getKV, setKV } from '@/lib/supabase';
+import { isUpstashConfigured, upstashGet } from '@/lib/upstash';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -12,13 +13,17 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
   });
 
-  // If Supabase is configured, try to fetch the remote value once and use it
+  // Try to fetch remote value once and use it. Preference order: Upstash (client-side) then Supabase.
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
     let mounted = true;
     (async () => {
       try {
-        const remote = await getKV(key);
+        let remote: any = null;
+        if (isUpstashConfigured) {
+          remote = await upstashGet(key);
+        } else if (isSupabaseConfigured) {
+          remote = await getKV(key);
+        }
         if (!mounted) return;
         if (remote !== null && remote !== undefined) {
           setStoredValue(remote as T);
@@ -29,7 +34,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
           }
         }
       } catch (err) {
-        console.warn('Failed to sync initial value from Supabase', err);
+        console.warn('Failed to sync initial value from remote', err);
       }
     })();
     return () => { mounted = false; };

@@ -56,7 +56,8 @@ export default function SettingsManager() {
     if (adminApiKey) {
       (async () => {
         try {
-          await fetch('/api/admin/settings', {
+          const devApi = import.meta.env.DEV ? 'http://localhost:8787/admin/settings' : '/api/admin/settings';
+          await fetch(devApi, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -65,7 +66,7 @@ export default function SettingsManager() {
             body: JSON.stringify({ key: 'site_contact', value: payloadContact }),
           });
 
-          await fetch('/api/admin/settings', {
+          await fetch(devApi, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ export default function SettingsManager() {
           toast.success('Contact settings updated');
         } catch (err) {
           console.warn('admin API write failed', err);
-          // fallback to local + direct supabase
+          // fallback to local + direct supabase/upstash
           setSiteContact(payloadContact);
           setSiteNotice(payloadNotice);
           toast.success('Updated locally (remote failed)');
