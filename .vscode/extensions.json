@@ -1,0 +1,41 @@
+{
+  "recommendations": [
+    // Essential JavaScript/TypeScript extensions
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    
+    // React development
+    "ms-vscode.vscode-react-javascript-snippets",
+    "formulahendry.auto-rename-tag",
+    "bradlc.vscode-tailwindcss",
+    
+    // Path and import helpers
+    "christian-kohler.path-intellisense",
+    "steoates.autoimport-es6-ts",
+    
+    // Git integration
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    
+    // Code quality and debugging
+    "ms-vscode.vscode-json",
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    
+    // Productivity and UI
+    "vscode-icons-team.vscode-icons",
+    "ms-vscode.live-server",
+    "ritwickdey.liveserver",
+    
+    // Additional useful extensions
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-thunder-client",
+    "christian-kohler.npm-intellisense",
+    "zignd.html-css-class-completion",
+    
+    // Markdown and documentation
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint"
+  ]
+}
