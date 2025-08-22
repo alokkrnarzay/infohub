@@ -48,10 +48,50 @@ export default function SettingsManager() {
       toast.error('Email cannot be empty');
       return;
     }
-    setSiteContact({ email: email.trim(), address: address.trim() });
-  // update notice
-  setSiteNotice({ text: noticeText || '', enabled: !!noticeEnabled });
-    toast.success('Contact settings updated');
+    const payloadContact = { email: email.trim(), address: address.trim() };
+    const payloadNotice = { text: noticeText || '', enabled: !!noticeEnabled };
+
+    // If there's a configured admin API key, call server endpoint which uses service role key.
+    const adminApiKey = import.meta.env.VITE_ADMIN_API_KEY as string | undefined;
+    if (adminApiKey) {
+      (async () => {
+        try {
+          await fetch('/api/admin/settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminApiKey,
+            },
+            body: JSON.stringify({ key: 'site_contact', value: payloadContact }),
+          });
+
+          await fetch('/api/admin/settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-key': adminApiKey,
+            },
+            body: JSON.stringify({ key: 'site_notice', value: payloadNotice }),
+          });
+
+          // update local copies
+          setSiteContact(payloadContact);
+          setSiteNotice(payloadNotice);
+          toast.success('Contact settings updated');
+        } catch (err) {
+          console.warn('admin API write failed', err);
+          // fallback to local + direct supabase
+          setSiteContact(payloadContact);
+          setSiteNotice(payloadNotice);
+          toast.success('Updated locally (remote failed)');
+        }
+      })();
+    } else {
+      // fallback: direct client-side sync (existing behavior)
+      setSiteContact(payloadContact);
+      setSiteNotice(payloadNotice);
+      toast.success('Contact settings updated');
+    }
   };
 
   const handleReset = () => {
