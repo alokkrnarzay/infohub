@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import NoticeBar from '@/components/NoticeBar';
 
 // Pages
 import Home from './pages/Home';
@@ -32,6 +33,7 @@ const App = () => (
         <BrowserRouter>
           <div className="min-h-screen flex flex-col">
             <Navbar />
+            <NoticeBar />
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Home />} />

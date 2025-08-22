@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export default function TermsOfService() {
+  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,8 +75,8 @@ export default function TermsOfService() {
               If you have questions about these Terms, please contact us at:
             </p>
             <ul>
-              <li>Email: freeinformationetc@gmail.com</li>
-              <li>Address: Kokrajhar, 783370</li>
+              <li>Email: {siteContact.email}</li>
+              <li>Address: {siteContact.address}</li>
             </ul>
           </CardContent>
         </Card>

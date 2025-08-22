@@ -14,6 +14,7 @@ export default function Donate() {
   });
   const targetUrl = settings.isActive ? (settings.url || DEFAULT_PAYMENT_URL) : FALLBACK_URL;
   const isExternal = /^https?:\/\//i.test(targetUrl);
+  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +42,7 @@ export default function Donate() {
                   )}
                 </Button>
                 <p className="text-sm text-gray-500 mt-2">
-                  Having issues with the link? Email us at <a href="mailto:freeinformationetc@gmail.com" className="underline">freeinformationetc@gmail.com</a>.
+                  Having issues with the link? Email us at <a href={`mailto:${siteContact.email}`} className="underline">{siteContact.email}</a>.
                 </p>
               </div>
 

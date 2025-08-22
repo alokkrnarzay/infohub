@@ -20,6 +20,7 @@ import EventsManager from './EventsManager';
 import ScholarshipsManager from './ScholarshipsManager';
 import CommentsManager from './CommentsManager';
 import PaymentManager from './PaymentManager';
+import SettingsManager from './SettingsManager';
 
 export default function AdminDashboard() {
   const [jobs] = useLocalStorage<Link[]>('jobs', []);
@@ -111,6 +112,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -230,6 +232,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="payments" className="mt-6">
             <PaymentManager />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <SettingsManager />
           </TabsContent>
         </Tabs>
       </div>

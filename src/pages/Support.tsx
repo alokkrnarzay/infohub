@@ -9,6 +9,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Comment, PaymentSettings } from '@/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 const initialComments: Comment[] = [
   {
@@ -54,6 +55,7 @@ export default function Support() {
     updatedAt: new Date().toISOString(),
   });
   const DEFAULT_PAYMENT_URL = 'https://payments.cashfree.com/forms/akny';
+  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +85,9 @@ export default function Support() {
     setEmail('');
     setMessage('');
     setRating(0);
+  // remember this browser as the owner of the last-submitted email so user can edit their comment
+  try { localStorage.setItem('last_comment_email', newComment.email); } catch (e) { console.warn('Could not persist last_comment_email', e); }
+  setOwnerEmail(newComment.email);
     
     toast.success('Thank you for your feedback! Your comment is under review.');
   };
@@ -102,6 +107,45 @@ export default function Support() {
   };
 
   const displayRating = hoveredRating || rating;
+
+  // allow same-browser user to edit their comments (tracked by last submitted email)
+  const [ownerEmail, setOwnerEmail] = useState(() => {
+    try { return localStorage.getItem('last_comment_email') || ''; } catch { return ''; }
+  });
+
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [editRating, setEditRating] = useState(0);
+
+  const startEditing = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditName(comment.name);
+    setEditEmail(comment.email);
+    setEditMessage(comment.message);
+    setEditRating(comment.rating);
+  };
+
+  const cancelEditing = () => {
+    setEditingCommentId(null);
+  };
+
+  const submitEdit = (id: string) => {
+    if (!editName || !editEmail || !editMessage || editRating === 0) {
+      toast.error('Please fill all fields and provide a rating.');
+      return;
+    }
+    const updated = comments.map(c =>
+      c.id === id ? { ...c, name: editName, email: editEmail, message: editMessage, rating: editRating, updatedAt: new Date().toISOString(), isApproved: false } : c
+    );
+    setComments(updated);
+    // update owner email to edited email
+  try { localStorage.setItem('last_comment_email', editEmail); } catch (e) { console.warn('Could not persist last_comment_email', e); }
+    setOwnerEmail(editEmail);
+    setEditingCommentId(null);
+    toast.success('Your comment was updated and is pending review.');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -136,14 +180,14 @@ export default function Support() {
                       <Mail className="h-5 w-5 text-blue-600" />
                       <div>
                         <p className="font-medium">Email</p>
-                        <p className="text-gray-600">freeinformationetc@gmail.com</p>
+                        <p className="text-gray-600">{siteContact.email}</p>
                       </div>
                     </div>
                                         <div className="flex items-center space-x-3">
                       <MapPin className="h-5 w-5 text-red-600" />
                       <div>
                         <p className="font-medium">Address</p>
-                        <p className="text-gray-600">Kokrajhar,783370</p>
+                        <p className="text-gray-600">{siteContact.address}</p>
                       </div>
                     </div>
 
@@ -327,7 +371,45 @@ export default function Support() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-600">{comment.message}</p>
+                          {editingCommentId === comment.id ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Name</label>
+                                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Email</label>
+                                  <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-2">Rating</label>
+                                <div className="flex items-center space-x-1">
+                                  {[...Array(5)].map((_, idx) => (
+                                    <Star key={idx} className={`h-5 w-5 cursor-pointer ${idx < editRating ? 'text-yellow-500' : 'text-gray-300'}`} onClick={() => setEditRating(idx + 1)} />
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-2">Message</label>
+                                <Textarea value={editMessage} onChange={(e) => setEditMessage(e.target.value)} rows={3} />
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button onClick={() => submitEdit(comment.id)}>Save</Button>
+                                <Button variant="outline" onClick={cancelEditing}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-gray-600">{comment.message}</p>
+                              {ownerEmail === comment.email && (
+                                <div className="mt-3">
+                                  <Button size="sm" variant="outline" onClick={() => startEditing(comment)}>Edit your review</Button>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </CardContent>
                       </Card>
                     ))}

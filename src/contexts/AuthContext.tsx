@@ -35,10 +35,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     // Mock admin login - in production, this would be a real API call
-    if (username === 'adminalokkrnrazary' && password === 'Alokinfohub@2000005') {
+    if (username === 'alokkrnarzary' && password === 'Alokinfohub@2000005') {
       const adminUser: User = {
         id: '1',
-        username: 'adminalokkrnrazary',
+        username: 'alokkrnarzary',
         email: 'admin@infohub.com',
         role: 'admin'
       };

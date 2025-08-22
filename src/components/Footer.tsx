@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export default function Footer() {
+  const [siteContact] = useLocalStorage('site_contact', { email: 'freeinformationetc@gmail.com', address: 'Kokrajhar, 783370' });
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -9,13 +12,12 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">InfoHub</h3>
             <p className="text-gray-300 mb-4">
-              Your comprehensive gateway to opportunities in jobs, education, events, and scholarships.
-              Stay informed and never miss an opportunity.
+              Your comprehensive gateway to opportunities in jobs, education, events, and scholarships - by alok.
             </p>
             <div className="flex space-x-4">
               <div className="flex items-center text-gray-300">
                 <Mail className="h-4 w-4 mr-2" />
-                freeinformationetc@gmail.com
+                {siteContact.email}
               </div>
                           </div>
           </div>

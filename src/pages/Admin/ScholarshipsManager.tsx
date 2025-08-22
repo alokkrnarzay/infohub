@@ -46,7 +46,7 @@ const parseDateOnly = (s: string) => {
 
 const generateId = () =>
   (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
-    ? (crypto as any).randomUUID()
+  ? (crypto as unknown as { randomUUID: () => string }).randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function ScholarshipsManager() {
@@ -100,7 +100,12 @@ export default function ScholarshipsManager() {
     if (editingScholarship) {
       const updatedScholarships = scholarships.map(scholarship =>
         scholarship.id === editingScholarship.id
-          ? { ...scholarship, ...sanitized, updatedAt: new Date().toISOString() }
+          ? { 
+              ...scholarship, 
+              ...sanitized, 
+              type: sanitized.type === 'private' || sanitized.type === 'government' ? sanitized.type : scholarship.type,
+              updatedAt: new Date().toISOString() 
+            }
           : scholarship
       );
       setScholarships(updatedScholarships);
@@ -109,7 +114,7 @@ export default function ScholarshipsManager() {
       const newScholarship: Scholarship = {
         id: generateId(),
         ...sanitized,
-        type: sanitized.type as 'private' | 'government',
+        type: sanitized.type === 'private' || sanitized.type === 'government' ? sanitized.type : 'private',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
