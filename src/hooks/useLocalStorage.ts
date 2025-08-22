@@ -88,11 +88,16 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       window.localStorage.setItem(key, stringified);
       // If Supabase is configured, persist remotely as well.
       if (isSupabaseConfigured) {
+        // eslint-disable-next-line no-console
+        console.debug('[useLocalStorage] scheduling remote setKV for key', key);
         try {
           setKV(key, valueToStore).catch((e) => console.warn('Failed to write KV to Supabase', e));
         } catch (err) {
           console.warn('Supabase setKV error', err);
         }
+      } else {
+        // eslint-disable-next-line no-console
+        console.debug('[useLocalStorage] remote sync disabled; running only localStorage for key', key);
       }
       // Notify same-tab listeners (other components) about the change.
       try {
