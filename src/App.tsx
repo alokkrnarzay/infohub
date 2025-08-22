@@ -18,7 +18,7 @@ import Resources from './pages/Resources';
 import Support from './pages/Support';
 import Login from './pages/Login';
 import AdminDashboard from './pages/Admin/Dashboard';
-import NotFound from './pages/NotFound';
+import NotFoundPage from './pages/NotFound';
 import PrivacyPolicy from './pages/Privacy';
 import TermsOfService from './pages/Terms';
 import Donate from './pages/Donate';
@@ -30,7 +30,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
-        <BrowserRouter>
+  <BrowserRouter basename={import.meta.env.BASE_URL}>
           <div className="min-h-screen flex flex-col">
             <Navbar />
             <NoticeBar />
@@ -52,7 +52,8 @@ const App = () => (
                     <AdminDashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="*" element={<NotFound />} />
+                {/* Catch-all route for 404 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
             <Footer />
