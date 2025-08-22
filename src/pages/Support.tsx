@@ -43,6 +43,7 @@ const initialComments: Comment[] = [
 
 export default function Support() {
   const [comments, setComments] = useLocalStorage<Comment[]>('comments', initialComments);
+  const [lastCommentEmail, setLastCommentEmail] = useLocalStorage<string>('last_comment_email', '');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -85,8 +86,8 @@ export default function Support() {
     setEmail('');
     setMessage('');
     setRating(0);
-  // remember this browser as the owner of the last-submitted email so user can edit their comment
-  try { localStorage.setItem('last_comment_email', newComment.email); } catch (e) { console.warn('Could not persist last_comment_email', e); }
+  // persist owner email remotely (or locally if no remote configured)
+  setLastCommentEmail(newComment.email);
   setOwnerEmail(newComment.email);
     
     toast.success('Thank you for your feedback! Your comment is under review.');
@@ -109,9 +110,7 @@ export default function Support() {
   const displayRating = hoveredRating || rating;
 
   // allow same-browser user to edit their comments (tracked by last submitted email)
-  const [ownerEmail, setOwnerEmail] = useState(() => {
-    try { return localStorage.getItem('last_comment_email') || ''; } catch { return ''; }
-  });
+  const [ownerEmail, setOwnerEmail] = useState(() => lastCommentEmail || '');
 
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -140,9 +139,9 @@ export default function Support() {
       c.id === id ? { ...c, name: editName, email: editEmail, message: editMessage, rating: editRating, updatedAt: new Date().toISOString(), isApproved: false } : c
     );
     setComments(updated);
-    // update owner email to edited email
-  try { localStorage.setItem('last_comment_email', editEmail); } catch (e) { console.warn('Could not persist last_comment_email', e); }
-    setOwnerEmail(editEmail);
+  // update owner email to edited email (persist)
+  setLastCommentEmail(editEmail);
+  setOwnerEmail(editEmail);
     setEditingCommentId(null);
     toast.success('Your comment was updated and is pending review.');
   };

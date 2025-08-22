@@ -5,6 +5,10 @@ import { isUpstashConfigured, upstashGet } from '@/lib/upstash';
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
+      // If a remote backend is configured, prefer remote as the source of truth
+      if (isUpstashConfigured || isSupabaseConfigured) {
+        return initialValue;
+      }
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
@@ -26,12 +30,9 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         }
         if (!mounted) return;
         if (remote !== null && remote !== undefined) {
+          // Use remote value as the source of truth. Do NOT write it into localStorage
+          // when a remote backend is configured — the user requested remote-only persistence.
           setStoredValue(remote as T);
-          try {
-            window.localStorage.setItem(key, JSON.stringify(remote));
-          } catch (e) {
-            // ignore
-          }
         }
       } catch (err) {
         console.warn('Failed to sync initial value from remote', err);
@@ -60,17 +61,26 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       setStoredValue(ev.detail.newValue as T);
     };
 
-    window.addEventListener('storage', handleStorage);
+    // Only listen to the browser 'storage' event when no remote backend exists. When
+    // a remote backend is configured, cross-tab sync should come from the remote store.
+    if (!isUpstashConfigured && !isSupabaseConfigured) {
+      window.addEventListener('storage', handleStorage);
+    }
+    // Always listen to the in-app custom event to notify other components in the same tab.
     window.addEventListener('local-storage', handleCustom as EventListener);
 
     return () => {
-      window.removeEventListener('storage', handleStorage);
+      if (!isUpstashConfigured && !isSupabaseConfigured) {
+        window.removeEventListener('storage', handleStorage);
+      }
       window.removeEventListener('local-storage', handleCustom as EventListener);
     };
   }, [key, initialValue]);
 
-  // Ensure initialValue is persisted once if the key is not present in localStorage.
+  // Ensure initialValue is persisted once if the key is not present in localStorage
+  // Only do this when no remote backend is configured.
   useEffect(() => {
+    if (isUpstashConfigured || isSupabaseConfigured) return;
     try {
       const exists = window.localStorage.getItem(key);
       if (exists === null) {
@@ -89,10 +99,20 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      const stringified = JSON.stringify(valueToStore);
-      window.localStorage.setItem(key, stringified);
-      // If Supabase is configured, persist remotely as well.
-      if (isSupabaseConfigured) {
+      // Remote-first: if Upstash or Supabase configured, persist remotely and do NOT depend on localStorage.
+      if (isUpstashConfigured) {
+        // eslint-disable-next-line no-console
+        console.debug('[useLocalStorage] scheduling remote upstashSet for key', key);
+        try {
+          // fire-and-forget; update UI immediately
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          (async () => {
+            try { await (await import('@/lib/upstash')).upstashSet(key, valueToStore); } catch (e) { console.warn('Failed to write KV to Upstash', e); }
+          })();
+        } catch (err) {
+          console.warn('Upstash set error', err);
+        }
+      } else if (isSupabaseConfigured) {
         // eslint-disable-next-line no-console
         console.debug('[useLocalStorage] scheduling remote setKV for key', key);
         try {
@@ -101,8 +121,13 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
           console.warn('Supabase setKV error', err);
         }
       } else {
-        // eslint-disable-next-line no-console
-        console.debug('[useLocalStorage] remote sync disabled; running only localStorage for key', key);
+        // fallback to localStorage when no remote configured
+        try {
+          const stringified = JSON.stringify(valueToStore);
+          window.localStorage.setItem(key, stringified);
+        } catch (err) {
+          console.warn(`Could not write localStorage key "${key}"`, err);
+        }
       }
       // Notify same-tab listeners (other components) about the change.
       try {
