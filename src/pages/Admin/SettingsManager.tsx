@@ -7,6 +7,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { deleteKV, isSupabaseConfigured } from '@/lib/supabase';
 
 type SiteContact = {
   email: string;
@@ -58,6 +59,36 @@ export default function SettingsManager() {
     setAddress(defaultContact.address);
     setSiteContact(defaultContact);
     toast.success('Reset to defaults');
+  };
+
+  const handleClearRemote = async () => {
+    // Clear local values first
+    setEmail('');
+    setAddress('');
+    setSiteContact({ email: '', address: '' });
+    setNoticeText('');
+    setNoticeEnabled(false);
+
+    let ok = true;
+    if (isSupabaseConfigured) {
+      try {
+        const a = await deleteKV('site_contact');
+        const b = await deleteKV('site_notice');
+        ok = a && b;
+      } catch (err) {
+        ok = false;
+        console.warn('Error deleting remote keys', err);
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.debug('[SettingsManager] supabase not configured; only local values cleared');
+    }
+
+    if (ok) {
+      toast.success('Cleared settings locally and remotely');
+    } else {
+      toast.success('Cleared local settings (remote not configured or failed)');
+    }
   };
 
   return (

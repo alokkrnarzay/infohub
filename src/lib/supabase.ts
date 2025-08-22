@@ -63,4 +63,27 @@ export async function setKV(key: string, value: any): Promise<boolean> {
   }
 }
 
+/**
+ * Delete a key from the `kv` table.
+ * Returns true on success, false on failure or when supabase is not configured.
+ */
+export async function deleteKV(key: string): Promise<boolean> {
+  if (!supabase) {
+    // eslint-disable-next-line no-console
+    console.debug('[supabase] deleteKV skipped (not configured) for key', key);
+    return false;
+  }
+  try {
+    const { error } = await supabase.from('kv').delete().eq('key', key);
+    if (error) {
+      console.warn('supabase deleteKV error', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('supabase deleteKV exception', err);
+    return false;
+  }
+}
+
 export default supabase;
