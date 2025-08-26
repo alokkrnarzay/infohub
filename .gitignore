@@ -19,7 +19,8 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+# Include VS Code workspace settings for consistent development experience
+# .vscode/
 
 # Env files
 .env
